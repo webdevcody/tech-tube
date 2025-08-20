@@ -1,0 +1,1 @@
+just look at the given file, see if existing components exist we can reuse and use them. if not, see if there are components in the file that could be reused in other pages because they are similar and exctract to reuse them:

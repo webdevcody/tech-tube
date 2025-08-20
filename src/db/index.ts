@@ -1,0 +1,8 @@
+import * as schema from "./schema";
+import { drizzle } from "drizzle-orm/node-postgres";
+import pg from "pg";
+
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL! });
+const database = drizzle(pool, { schema, logger: true });
+
+export { database, pool };
