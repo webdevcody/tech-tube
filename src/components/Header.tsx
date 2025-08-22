@@ -2,8 +2,9 @@ import { Link } from "@tanstack/react-router";
 import { authClient } from "~/lib/auth-client";
 import { ModeToggle } from "./mode-toggle";
 import { Button, buttonVariants } from "./ui/button";
-import { Video, LogOut, User, Menu, X } from "lucide-react";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+import { Video, LogOut, User, Menu, X, Bell } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Badge } from "./ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +15,8 @@ import {
 } from "./ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { useState } from "react";
+import { getUnreadNotificationCountFn } from "~/fn/notifications";
+import { useQuery } from "@tanstack/react-query";
 
 const publicNavigationLinks = [
   {
@@ -29,6 +32,10 @@ const publicNavigationLinks = [
 const authenticatedNavigationLinks = [
   ...publicNavigationLinks,
   {
+    title: "Creators",
+    href: "/creators",
+  },
+  {
     title: "Subscriptions",
     href: "/subscriptions",
   },
@@ -40,6 +47,12 @@ export function Header() {
   const navigationLinks = session
     ? authenticatedNavigationLinks
     : publicNavigationLinks;
+
+  const { data: unreadCount } = useQuery({
+    queryKey: ["unread-notification-count"],
+    queryFn: () => getUnreadNotificationCountFn(),
+    enabled: !!session,
+  });
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -114,6 +127,19 @@ export function Header() {
                 >
                   Upload
                 </Link>
+                <Link to="/notifications" className="relative">
+                  <Button variant="ghost" size="icon" className="relative">
+                    <Bell className="h-5 w-5" />
+                    {unreadCount && unreadCount > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                      >
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </Link>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -121,6 +147,12 @@ export function Header() {
                       className="relative h-8 w-8 rounded-full"
                     >
                       <Avatar className="h-8 w-8">
+                        {session.user.image && (
+                          <AvatarImage
+                            src={session.user.image}
+                            alt={session.user.name || "Profile"}
+                          />
+                        )}
                         <AvatarFallback className="bg-primary/10">
                           <User className="h-4 w-4" />
                         </AvatarFallback>

@@ -5,11 +5,14 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
 import { Label } from "~/components/ui/label";
+import { Badge } from "~/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
-import { User, Save, ArrowLeft, Upload, Loader2 } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { User, Save, Upload, Loader2, X, Plus, Tag } from "lucide-react";
 import { user } from "~/db/schema";
 import { uploadImage } from "~/utils/cloudinary";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getUserTagsFn, addUserTagFn, removeUserTagFn } from "~/fn/tags";
+import { toast } from "sonner";
 
 interface EditProfileFormData {
   name: string;
@@ -19,13 +22,17 @@ interface EditProfileFormData {
 interface EditProfileFormProps {
   user: typeof user.$inferSelect;
   onSubmit: (data: { name: string; bio?: string; image?: string }) => Promise<void>;
+  onCancel?: () => void;
 }
 
-export function EditProfileForm({ user, onSubmit }: EditProfileFormProps) {
+export function EditProfileForm({ user, onSubmit, onCancel }: EditProfileFormProps) {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [newTagName, setNewTagName] = useState("");
+  const [newTagDescription, setNewTagDescription] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
 
   const {
     register,
@@ -37,6 +44,50 @@ export function EditProfileForm({ user, onSubmit }: EditProfileFormProps) {
       bio: user.bio || "",
     },
   });
+
+  const { data: userTags = [], isLoading: isLoadingTags } = useQuery({
+    queryKey: ["userTags", user.id],
+    queryFn: () => getUserTagsFn({ data: { userId: user.id } }),
+  });
+
+  const addTagMutation = useMutation({
+    mutationFn: (data: { tagName: string; description?: string }) =>
+      addUserTagFn({ data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userTags", user.id] });
+      setNewTagName("");
+      setNewTagDescription("");
+      toast.success("Tag added successfully!");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Failed to add tag");
+    },
+  });
+
+  const removeTagMutation = useMutation({
+    mutationFn: (tagId: string) => removeUserTagFn({ data: { tagId } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userTags", user.id] });
+      toast.success("Tag removed successfully!");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Failed to remove tag");
+    },
+  });
+
+  const handleAddTag = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTagName.trim()) return;
+
+    addTagMutation.mutate({
+      tagName: newTagName.trim(),
+      description: newTagDescription.trim() || undefined,
+    });
+  };
+
+  const handleRemoveTag = (tagId: string) => {
+    removeTagMutation.mutate(tagId);
+  };
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -91,15 +142,7 @@ export function EditProfileForm({ user, onSubmit }: EditProfileFormProps) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center gap-4">
-          <Link to="/profile/$id" params={{ id: user.id }}>
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Profile
-            </Button>
-          </Link>
-          <CardTitle>Edit Profile</CardTitle>
-        </div>
+        <CardTitle>Edit Profile</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex items-center gap-6">
@@ -202,6 +245,99 @@ export function EditProfileForm({ user, onSubmit }: EditProfileFormProps) {
             </p>
           </div>
 
+          {/* Tags Section */}
+          <div className="space-y-4 border-t pt-6">
+            <div className="flex items-center gap-2">
+              <Tag className="w-4 h-4" />
+              <Label className="text-base font-medium">Tags</Label>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Tags help other users discover your content and connect with creators who share similar interests.
+            </p>
+
+            {/* Display existing tags */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Current Tags</Label>
+              {isLoadingTags ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm text-muted-foreground">Loading tags...</span>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {userTags.length > 0 ? (
+                    userTags.map((userTag) => (
+                      <Badge key={userTag.id} variant="secondary" className="px-3 py-1">
+                        <span>{userTag.tag.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTag(userTag.tagId)}
+                          disabled={removeTagMutation.isPending}
+                          className="ml-2 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No tags added yet.</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Add new tag form */}
+            <div className="space-y-4 border-t pt-4">
+              <Label className="text-sm font-medium">Add New Tag</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="tagName" className="text-xs">Tag Name</Label>
+                  <Input
+                    id="tagName"
+                    value={newTagName}
+                    onChange={(e) => setNewTagName(e.target.value)}
+                    placeholder="e.g., React, JavaScript, Web Development"
+                    maxLength={50}
+                    disabled={addTagMutation.isPending}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Maximum 50 characters. Use specific, relevant tags.
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="tagDescription" className="text-xs">Description (Optional)</Label>
+                  <Input
+                    id="tagDescription"
+                    value={newTagDescription}
+                    onChange={(e) => setNewTagDescription(e.target.value)}
+                    placeholder="Brief description of your expertise"
+                    maxLength={200}
+                    disabled={addTagMutation.isPending}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Optional. Maximum 200 characters.
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                onClick={handleAddTag}
+                disabled={!newTagName.trim() || addTagMutation.isPending}
+                size="sm"
+                variant="outline"
+              >
+                {addTagMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4 mr-2" />
+                )}
+                Add Tag
+              </Button>
+            </div>
+          </div>
+
           <div className="flex gap-4 pt-4">
             <Button type="submit" disabled={isSubmitting || isUploadingImage}>
               {isUploadingImage ? (
@@ -216,11 +352,11 @@ export function EditProfileForm({ user, onSubmit }: EditProfileFormProps) {
                 : "Save Changes"
               }
             </Button>
-            <Link to="/profile/$id" params={{ id: user.id }}>
-              <Button type="button" variant="outline">
+            {onCancel && (
+              <Button type="button" variant="outline" onClick={onCancel}>
                 Cancel
               </Button>
-            </Link>
+            )}
           </div>
         </form>
       </CardContent>

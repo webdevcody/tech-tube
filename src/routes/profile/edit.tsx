@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { database } from "~/db";
 import { user } from "~/db/schema";
@@ -7,6 +7,14 @@ import { Page } from "~/components/Page";
 import { PageTitle } from "~/components/PageTitle";
 import { EditProfileForm } from "./-components/EditProfileForm";
 import { authenticatedMiddleware } from "~/fn/middleware";
+import { 
+  Breadcrumb, 
+  BreadcrumbList, 
+  BreadcrumbItem, 
+  BreadcrumbLink, 
+  BreadcrumbSeparator, 
+  BreadcrumbPage 
+} from "~/components/ui/breadcrumb";
 import z from "zod";
 
 const getCurrentUserFn = createServerFn({
@@ -75,11 +83,31 @@ function EditProfilePage() {
     }
   };
 
+  const handleCancel = () => {
+    navigate({ to: "/profile/$id", params: { id: user.id } });
+  };
+
   return (
     <Page>
       <div className="max-w-2xl mx-auto space-y-8">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/profile/$id" params={{ id: user.id }}>
+                  Profile
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Edit Profile</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+        
         <PageTitle title="Edit Profile" />
-        <EditProfileForm user={user} onSubmit={handleUpdateProfile} />
+        <EditProfileForm user={user} onSubmit={handleUpdateProfile} onCancel={handleCancel} />
       </div>
     </Page>
   );

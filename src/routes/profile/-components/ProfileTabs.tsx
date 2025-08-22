@@ -4,10 +4,10 @@ import { VideoCard } from "~/components/VideoCard";
 import { EmptyState } from "~/components/EmptyState";
 import { UserCommentsSection } from "~/components/UserCommentsSection";
 import { Video, MessageSquare } from "lucide-react";
-import { video } from "~/db/schema";
+import type { VideoWithLikes } from "~/data-access/videos";
 
 interface ProfileTabsProps {
-  videos: (typeof video.$inferSelect)[];
+  videos: VideoWithLikes[];
   userId: string;
 }
 

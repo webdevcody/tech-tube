@@ -57,6 +57,34 @@
       "when": 1755879120700,
       "tag": "0007_funny_azazel",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1755896515982,
+      "tag": "0008_puzzling_prima",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1755896723147,
+      "tag": "0009_thin_mole_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1755897435743,
+      "tag": "0010_dry_argent",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1755898564172,
+      "tag": "0011_long_anthem",
+      "breakpoints": true
     }
   ]
 }

@@ -4,10 +4,12 @@ import {
   subscription,
   user,
   video,
+  videoLike,
   comment,
   type Subscription,
   type CreateSubscriptionData,
 } from "~/db/schema";
+import type { VideoWithLikes } from "./videos";
 
 export async function createSubscription(
   subscriptionData: CreateSubscriptionData
@@ -127,8 +129,8 @@ export async function getSubscribingCount(userId: string): Promise<number> {
 export async function getSubscribedUsersVideos(
   userId: string,
   limit: number = 20
-) {
-  return await database
+): Promise<VideoWithLikes[]> {
+  const result = await database
     .select({
       id: video.id,
       title: video.title,
@@ -142,6 +144,7 @@ export async function getSubscribedUsersVideos(
       userId: video.userId,
       createdAt: video.createdAt,
       updatedAt: video.updatedAt,
+      likeCount: count(videoLike.id),
       user: {
         id: user.id,
         name: user.name,
@@ -151,9 +154,16 @@ export async function getSubscribedUsersVideos(
     .from(video)
     .innerJoin(user, eq(video.userId, user.id))
     .innerJoin(subscription, eq(subscription.subscribedToId, video.userId))
+    .leftJoin(videoLike, eq(video.id, videoLike.videoId))
     .where(eq(subscription.subscriberId, userId))
+    .groupBy(video.id, user.id, user.name, user.image)
     .orderBy(desc(video.createdAt))
     .limit(limit);
+
+  return result.map(row => ({
+    ...row,
+    likeCount: Number(row.likeCount),
+  }));
 }
 
 export async function getSubscribedUsersComments(

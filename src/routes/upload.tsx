@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 import { createVideoFn } from "~/fn/videos";
 import { getErrorMessage } from "~/utils/error";
+import { formatDuration } from "~/utils/video";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import {
@@ -32,8 +33,11 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import { isCloudinaryConfigured } from "~/utils/cloudinary";
-import { publicEnv } from "~/config/publicEnv";
-import { useEffect, useState } from "react";
+import {
+  ChunkedUploader,
+  supportsChunkedUpload,
+} from "~/utils/cloudinary-chunked";
+import { useState, useRef } from "react";
 
 export const Route = createFileRoute("/upload")({
   component: Upload,
@@ -57,18 +61,14 @@ const uploadSchema = z.object({
 
 type UploadFormData = z.infer<typeof uploadSchema>;
 
-declare global {
-  interface Window {
-    cloudinary: any;
-  }
-}
-
 function Upload() {
   const navigate = useNavigate();
-  const [uploadWidget, setUploadWidget] = useState<any>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [videoInfo, setVideoInfo] = useState<any>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const chunkedUploaderRef = useRef<ChunkedUploader | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form Setup with Zod Resolver Following Form Patterns
   const form = useForm<UploadFormData>({
@@ -88,6 +88,7 @@ function Upload() {
       });
       form.reset();
       setVideoInfo(null);
+      setSelectedFile(null);
       navigate({ to: `/video/${video.id}` });
     },
     onError: (error) => {
@@ -97,158 +98,89 @@ function Upload() {
     },
   });
 
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.round(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-  };
 
-  // Shared upload widget configuration
-  const getWidgetConfig = () => ({
-    cloudName: publicEnv.cloudName,
-    uploadPreset: publicEnv.uploadPreset,
-    sources: ["local"],
-    resourceType: "video",
-    multiple: false,
-    maxFiles: 1,
-    thumbnailTransformation: {
-      width: 640,
-      height: 360,
-      quality: 100,
-      crop: "fill",
-      background: "black",
-      fetch_format: "jpg",
-    },
-    clientAllowedFormats: ["video"],
-    maxFileSize: 500000000, // 500MB
-    showAdvancedOptions: false,
-    showCompletedButton: true,
-    showUploadMoreButton: false,
-    styles: {
-      palette: {
-        window: "#1a1a1a",
-        windowBorder: "#333333",
-        tabIcon: "#ffffff",
-        menuIcons: "#ffffff",
-        textDark: "#ffffff",
-        textLight: "#cccccc",
-        link: "#0078ff",
-        action: "#0078ff",
-        inactiveTabIcon: "#888888",
-        error: "#ff4444",
-        inProgress: "#0078ff",
-        complete: "#00cc00",
-        sourceBg: "#262626",
-      },
-      fonts: {
-        default: null,
-        '"Fira Sans", sans-serif': {
-          url: "https://fonts.googleapis.com/css?family=Fira+Sans",
-          active: true,
-        },
-      },
-    },
-  });
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-  // Shared upload widget callback
-  const getWidgetCallback = (includeProgressTracking = true) => (error: any, result: any) => {
-    if (error) {
-      console.error("Upload error:", error);
-      toast.error("Upload failed", {
-        description: "There was an error uploading your video.",
+    if (file.type.indexOf("video/") !== 0) {
+      toast.error("Invalid file type", {
+        description: "Please select a video file.",
       });
-      if (includeProgressTracking) {
-        setIsUploading(false);
-        setUploadProgress(0);
-      }
       return;
     }
 
-    if (includeProgressTracking && result.event === "upload-added") {
-      setIsUploading(true);
-      setUploadProgress(0);
-    }
+    setSelectedFile(file);
+    handleDirectUpload(file);
+  };
 
-    if (includeProgressTracking && result.event === "progress") {
-      setUploadProgress(
-        Math.round(
-          (result.info.progress.loaded / result.info.progress.total) * 100
-        )
-      );
-    }
-
-    if (result.event === "success") {
-      const info = result.info;
-      setVideoInfo(info);
-
-      // Set form values with Cloudinary data
-      form.setValue("cloudinaryId", info.public_id);
-      form.setValue("duration", info.duration || 0);
-      form.setValue(
-        "thumbnailUrl",
-        info.thumbnail_url || info.secure_url.replace(/\.[^/.]+$/, ".jpg")
-      );
-
-      if (includeProgressTracking) {
-        setIsUploading(false);
-        setUploadProgress(100);
-      }
-
-      toast.success("Video uploaded!", {
-        description: includeProgressTracking 
-          ? "Please fill in the title and description." 
-          : undefined,
+  const handleDirectUpload = async (file: File) => {
+    if (!isCloudinaryConfigured()) {
+      toast.error("Cloudinary not configured", {
+        description: "Please check your environment variables.",
       });
+      return;
     }
 
-    if (includeProgressTracking && result.event === "close") {
-      setIsUploading(false);
-      setUploadProgress(0);
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    // Always use signed uploads with auto-chaptering
+    if (supportsChunkedUpload(file.size)) {
+      toast.info("Uploading large file with auto-chaptering", {
+        description: "Using chunked upload for better reliability.",
+      });
+    } else {
+      toast.info("Uploading video with auto-chaptering");
+    }
+
+    const uploader = new ChunkedUploader({
+      file,
+      onProgress: (progress) => {
+        setUploadProgress(progress);
+      },
+      onSuccess: (response) => {
+        setVideoInfo(response);
+        form.setValue("cloudinaryId", response.public_id);
+        form.setValue("duration", response.duration || 0);
+        form.setValue(
+          "thumbnailUrl",
+          response.thumbnail_url ||
+            response.secure_url.replace(/\.[^/.]+$/, ".jpg")
+        );
+        setIsUploading(false);
+        toast.success("Video uploaded successfully!", {
+          description: "Chapters will start generating shortly.",
+        });
+      },
+      onError: (error) => {
+        console.error("Upload error:", error);
+        toast.error("Upload failed", {
+          description:
+            error.message || "There was an error uploading your video.",
+        });
+        setIsUploading(false);
+        setUploadProgress(0);
+        setSelectedFile(null);
+      },
+    });
+
+    chunkedUploaderRef.current = uploader;
+    await uploader.upload();
+  };
+
+  const handleOpenWidget = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
 
-  // Initialize Cloudinary Upload Widget
-  useEffect(() => {
-    const loadCloudinaryScript = () => {
-      const script = document.createElement("script");
-      script.src = "https://upload-widget.cloudinary.com/global/all.js";
-      script.async = true;
-      script.onload = () => {
-        if (window.cloudinary && isCloudinaryConfigured()) {
-          const widget = window.cloudinary.createUploadWidget(
-            getWidgetConfig(),
-            getWidgetCallback(true)
-          );
-          setUploadWidget(widget);
-        }
-      };
-      document.body.appendChild(script);
-    };
-
-    if (!window.cloudinary) {
-      loadCloudinaryScript();
-    } else if (isCloudinaryConfigured()) {
-      const widget = window.cloudinary.createUploadWidget(
-        getWidgetConfig(),
-        getWidgetCallback(false)
-      );
-      setUploadWidget(widget);
-    }
-
-    return () => {
-      if (uploadWidget) {
-        uploadWidget.destroy();
-      }
-    };
-  }, []);
-
-  const handleOpenWidget = () => {
-    if (uploadWidget) {
-      uploadWidget.open();
-    } else {
-      toast.error("Upload widget not initialized", {
-        description: "Please check your Cloudinary configuration.",
-      });
+  const handleCancelUpload = () => {
+    if (chunkedUploaderRef.current) {
+      chunkedUploaderRef.current.cancel();
+      setIsUploading(false);
+      setUploadProgress(0);
+      toast.info("Upload cancelled");
     }
   };
 
@@ -373,7 +305,12 @@ function Upload() {
                               type="button"
                               variant="outline"
                               size="sm"
-                              onClick={handleOpenWidget}
+                              onClick={() => {
+                                setVideoInfo(null);
+                                setSelectedFile(null);
+                                form.setValue("cloudinaryId", "");
+                                handleOpenWidget();
+                              }}
                             >
                               Upload Different Video
                             </Button>
@@ -395,6 +332,13 @@ function Upload() {
                         </div>
                       ) : (
                         <div className="space-y-4">
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="video/*"
+                            onChange={handleFileSelect}
+                            className="hidden"
+                          />
                           <Button
                             type="button"
                             variant="outline"
@@ -408,10 +352,12 @@ function Upload() {
                                 <p className="text-sm font-medium">
                                   {!isCloudinaryConfigured()
                                     ? "Cloudinary not configured"
-                                    : "Click to upload video"}
+                                    : isUploading
+                                      ? "Uploading..."
+                                      : "Click to upload video"}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                  MP4, WebM, MOV, AVI (max 500MB)
+                                  MP4, WebM, MOV, AVI • Auto-chaptering enabled
                                 </p>
                               </div>
                             </div>
@@ -420,7 +366,12 @@ function Upload() {
                           {isUploading && (
                             <div className="space-y-2">
                               <div className="flex justify-between text-sm">
-                                <span>Uploading...</span>
+                                <span>
+                                  {selectedFile &&
+                                  supportsChunkedUpload(selectedFile.size)
+                                    ? "Uploading large file in chunks..."
+                                    : "Uploading..."}
+                                </span>
                                 <span>{uploadProgress}%</span>
                               </div>
                               <div className="w-full bg-muted rounded-full h-2">
@@ -429,6 +380,27 @@ function Upload() {
                                   style={{ width: `${uploadProgress}%` }}
                                 />
                               </div>
+                              {selectedFile && (
+                                <div className="flex justify-between items-center">
+                                  <p className="text-xs text-muted-foreground">
+                                    {selectedFile.name} (
+                                    {(selectedFile.size / 1024 / 1024).toFixed(
+                                      2
+                                    )}{" "}
+                                    MB)
+                                  </p>
+                                  {supportsChunkedUpload(selectedFile.size) && (
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={handleCancelUpload}
+                                    >
+                                      Cancel
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -436,8 +408,8 @@ function Upload() {
 
                       {!videoInfo && (
                         <p className="text-sm text-muted-foreground">
-                          Upload your video to continue. The video will be
-                          automatically processed and optimized.
+                          Upload your video to continue. Videos will include
+                          auto-generated chapters.
                         </p>
                       )}
                     </div>

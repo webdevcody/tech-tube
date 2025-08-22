@@ -9,6 +9,8 @@ import {
   deleteCommentLike,
   findCommentLike,
 } from "~/data-access/comments";
+import { findVideoById } from "~/data-access/videos";
+import { createNotification } from "~/data-access/notifications";
 import { z } from "zod";
 import { authenticatedMiddleware, optionalAuthentication } from "./middleware";
 
@@ -44,6 +46,21 @@ export const createCommentFn = createServerFn({
     };
 
     const newComment = await createComment(commentData);
+
+    // Create notification for video owner (if they're not the one commenting)
+    const video = await findVideoById(data.videoId);
+    if (video && video.userId !== context.userId) {
+      await createNotification({
+        id: crypto.randomUUID(),
+        type: "comment",
+        message: `Someone commented on your video "${video.title}"`,
+        userId: video.userId,
+        videoId: video.id,
+        commentId: newComment.id,
+        triggeredByUserId: context.userId,
+      });
+    }
+
     return newComment;
   });
 

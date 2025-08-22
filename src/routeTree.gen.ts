@@ -12,15 +12,22 @@ import { createServerRootRoute } from '@tanstack/react-start/server'
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UploadRouteImport } from './routes/upload'
-import { Route as SubscriptionsRouteImport } from './routes/subscriptions'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as CreatorsRouteImport } from './routes/creators'
 import { Route as BrowseRouteImport } from './routes/browse'
+import { Route as SubscriptionsRouteRouteImport } from './routes/subscriptions/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SubscriptionsIndexRouteImport } from './routes/subscriptions/index'
 import { Route as VideoIdRouteImport } from './routes/video/$id'
+import { Route as SubscriptionsVideosRouteImport } from './routes/subscriptions/videos'
+import { Route as SubscriptionsUsersRouteImport } from './routes/subscriptions/users'
+import { Route as SubscriptionsCommentsRouteImport } from './routes/subscriptions/comments'
 import { Route as ProfileEditRouteImport } from './routes/profile/edit'
 import { Route as ProfileIdRouteImport } from './routes/profile/$id'
+import { Route as VideoEditIdRouteImport } from './routes/video/edit/$id'
 import { ServerRoute as ApiAuthSplatServerRouteImport } from './routes/api/auth/$'
 
 const rootServerRouteImport = createServerRootRoute()
@@ -28,11 +35,6 @@ const rootServerRouteImport = createServerRootRoute()
 const UploadRoute = UploadRouteImport.update({
   id: '/upload',
   path: '/upload',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SubscriptionsRoute = SubscriptionsRouteImport.update({
-  id: '/subscriptions',
-  path: '/subscriptions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignUpRoute = SignUpRouteImport.update({
@@ -45,9 +47,19 @@ const SignInRoute = SignInRouteImport.update({
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreatorsRoute = CreatorsRouteImport.update({
+  id: '/creators',
+  path: '/creators',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BrowseRoute = BrowseRouteImport.update({
@@ -55,15 +67,40 @@ const BrowseRoute = BrowseRouteImport.update({
   path: '/browse',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SubscriptionsRouteRoute = SubscriptionsRouteRouteImport.update({
+  id: '/subscriptions',
+  path: '/subscriptions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SubscriptionsIndexRoute = SubscriptionsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SubscriptionsRouteRoute,
+} as any)
 const VideoIdRoute = VideoIdRouteImport.update({
   id: '/video/$id',
   path: '/video/$id',
   getParentRoute: () => rootRouteImport,
+} as any)
+const SubscriptionsVideosRoute = SubscriptionsVideosRouteImport.update({
+  id: '/videos',
+  path: '/videos',
+  getParentRoute: () => SubscriptionsRouteRoute,
+} as any)
+const SubscriptionsUsersRoute = SubscriptionsUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => SubscriptionsRouteRoute,
+} as any)
+const SubscriptionsCommentsRoute = SubscriptionsCommentsRouteImport.update({
+  id: '/comments',
+  path: '/comments',
+  getParentRoute: () => SubscriptionsRouteRoute,
 } as any)
 const ProfileEditRoute = ProfileEditRouteImport.update({
   id: '/profile/edit',
@@ -75,6 +112,11 @@ const ProfileIdRoute = ProfileIdRouteImport.update({
   path: '/profile/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VideoEditIdRoute = VideoEditIdRouteImport.update({
+  id: '/video/edit/$id',
+  path: '/video/edit/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatServerRoute = ApiAuthSplatServerRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -83,91 +125,134 @@ const ApiAuthSplatServerRoute = ApiAuthSplatServerRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/subscriptions': typeof SubscriptionsRouteRouteWithChildren
   '/browse': typeof BrowseRoute
+  '/creators': typeof CreatorsRoute
   '/dashboard': typeof DashboardRoute
+  '/notifications': typeof NotificationsRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
-  '/subscriptions': typeof SubscriptionsRoute
   '/upload': typeof UploadRoute
   '/profile/$id': typeof ProfileIdRoute
   '/profile/edit': typeof ProfileEditRoute
+  '/subscriptions/comments': typeof SubscriptionsCommentsRoute
+  '/subscriptions/users': typeof SubscriptionsUsersRoute
+  '/subscriptions/videos': typeof SubscriptionsVideosRoute
   '/video/$id': typeof VideoIdRoute
+  '/subscriptions/': typeof SubscriptionsIndexRoute
+  '/video/edit/$id': typeof VideoEditIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
+  '/creators': typeof CreatorsRoute
   '/dashboard': typeof DashboardRoute
+  '/notifications': typeof NotificationsRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
-  '/subscriptions': typeof SubscriptionsRoute
   '/upload': typeof UploadRoute
   '/profile/$id': typeof ProfileIdRoute
   '/profile/edit': typeof ProfileEditRoute
+  '/subscriptions/comments': typeof SubscriptionsCommentsRoute
+  '/subscriptions/users': typeof SubscriptionsUsersRoute
+  '/subscriptions/videos': typeof SubscriptionsVideosRoute
   '/video/$id': typeof VideoIdRoute
+  '/subscriptions': typeof SubscriptionsIndexRoute
+  '/video/edit/$id': typeof VideoEditIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/subscriptions': typeof SubscriptionsRouteRouteWithChildren
   '/browse': typeof BrowseRoute
+  '/creators': typeof CreatorsRoute
   '/dashboard': typeof DashboardRoute
+  '/notifications': typeof NotificationsRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
-  '/subscriptions': typeof SubscriptionsRoute
   '/upload': typeof UploadRoute
   '/profile/$id': typeof ProfileIdRoute
   '/profile/edit': typeof ProfileEditRoute
+  '/subscriptions/comments': typeof SubscriptionsCommentsRoute
+  '/subscriptions/users': typeof SubscriptionsUsersRoute
+  '/subscriptions/videos': typeof SubscriptionsVideosRoute
   '/video/$id': typeof VideoIdRoute
+  '/subscriptions/': typeof SubscriptionsIndexRoute
+  '/video/edit/$id': typeof VideoEditIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/subscriptions'
     | '/browse'
+    | '/creators'
     | '/dashboard'
+    | '/notifications'
     | '/sign-in'
     | '/sign-up'
-    | '/subscriptions'
     | '/upload'
     | '/profile/$id'
     | '/profile/edit'
+    | '/subscriptions/comments'
+    | '/subscriptions/users'
+    | '/subscriptions/videos'
     | '/video/$id'
+    | '/subscriptions/'
+    | '/video/edit/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/browse'
+    | '/creators'
     | '/dashboard'
+    | '/notifications'
     | '/sign-in'
     | '/sign-up'
-    | '/subscriptions'
     | '/upload'
     | '/profile/$id'
     | '/profile/edit'
+    | '/subscriptions/comments'
+    | '/subscriptions/users'
+    | '/subscriptions/videos'
     | '/video/$id'
+    | '/subscriptions'
+    | '/video/edit/$id'
   id:
     | '__root__'
     | '/'
+    | '/subscriptions'
     | '/browse'
+    | '/creators'
     | '/dashboard'
+    | '/notifications'
     | '/sign-in'
     | '/sign-up'
-    | '/subscriptions'
     | '/upload'
     | '/profile/$id'
     | '/profile/edit'
+    | '/subscriptions/comments'
+    | '/subscriptions/users'
+    | '/subscriptions/videos'
     | '/video/$id'
+    | '/subscriptions/'
+    | '/video/edit/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SubscriptionsRouteRoute: typeof SubscriptionsRouteRouteWithChildren
   BrowseRoute: typeof BrowseRoute
+  CreatorsRoute: typeof CreatorsRoute
   DashboardRoute: typeof DashboardRoute
+  NotificationsRoute: typeof NotificationsRoute
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
-  SubscriptionsRoute: typeof SubscriptionsRoute
   UploadRoute: typeof UploadRoute
   ProfileIdRoute: typeof ProfileIdRoute
   ProfileEditRoute: typeof ProfileEditRoute
   VideoIdRoute: typeof VideoIdRoute
+  VideoEditIdRoute: typeof VideoEditIdRoute
 }
 export interface FileServerRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatServerRoute
@@ -200,13 +285,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UploadRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/subscriptions': {
-      id: '/subscriptions'
-      path: '/subscriptions'
-      fullPath: '/subscriptions'
-      preLoaderRoute: typeof SubscriptionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/sign-up': {
       id: '/sign-up'
       path: '/sign-up'
@@ -221,11 +299,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/creators': {
+      id: '/creators'
+      path: '/creators'
+      fullPath: '/creators'
+      preLoaderRoute: typeof CreatorsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/browse': {
@@ -235,6 +327,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BrowseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/subscriptions': {
+      id: '/subscriptions'
+      path: '/subscriptions'
+      fullPath: '/subscriptions'
+      preLoaderRoute: typeof SubscriptionsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -242,12 +341,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/subscriptions/': {
+      id: '/subscriptions/'
+      path: '/'
+      fullPath: '/subscriptions/'
+      preLoaderRoute: typeof SubscriptionsIndexRouteImport
+      parentRoute: typeof SubscriptionsRouteRoute
+    }
     '/video/$id': {
       id: '/video/$id'
       path: '/video/$id'
       fullPath: '/video/$id'
       preLoaderRoute: typeof VideoIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/subscriptions/videos': {
+      id: '/subscriptions/videos'
+      path: '/videos'
+      fullPath: '/subscriptions/videos'
+      preLoaderRoute: typeof SubscriptionsVideosRouteImport
+      parentRoute: typeof SubscriptionsRouteRoute
+    }
+    '/subscriptions/users': {
+      id: '/subscriptions/users'
+      path: '/users'
+      fullPath: '/subscriptions/users'
+      preLoaderRoute: typeof SubscriptionsUsersRouteImport
+      parentRoute: typeof SubscriptionsRouteRoute
+    }
+    '/subscriptions/comments': {
+      id: '/subscriptions/comments'
+      path: '/comments'
+      fullPath: '/subscriptions/comments'
+      preLoaderRoute: typeof SubscriptionsCommentsRouteImport
+      parentRoute: typeof SubscriptionsRouteRoute
     }
     '/profile/edit': {
       id: '/profile/edit'
@@ -261,6 +388,13 @@ declare module '@tanstack/react-router' {
       path: '/profile/$id'
       fullPath: '/profile/$id'
       preLoaderRoute: typeof ProfileIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/video/edit/$id': {
+      id: '/video/edit/$id'
+      path: '/video/edit/$id'
+      fullPath: '/video/edit/$id'
+      preLoaderRoute: typeof VideoEditIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -277,17 +411,37 @@ declare module '@tanstack/react-start/server' {
   }
 }
 
+interface SubscriptionsRouteRouteChildren {
+  SubscriptionsCommentsRoute: typeof SubscriptionsCommentsRoute
+  SubscriptionsUsersRoute: typeof SubscriptionsUsersRoute
+  SubscriptionsVideosRoute: typeof SubscriptionsVideosRoute
+  SubscriptionsIndexRoute: typeof SubscriptionsIndexRoute
+}
+
+const SubscriptionsRouteRouteChildren: SubscriptionsRouteRouteChildren = {
+  SubscriptionsCommentsRoute: SubscriptionsCommentsRoute,
+  SubscriptionsUsersRoute: SubscriptionsUsersRoute,
+  SubscriptionsVideosRoute: SubscriptionsVideosRoute,
+  SubscriptionsIndexRoute: SubscriptionsIndexRoute,
+}
+
+const SubscriptionsRouteRouteWithChildren =
+  SubscriptionsRouteRoute._addFileChildren(SubscriptionsRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SubscriptionsRouteRoute: SubscriptionsRouteRouteWithChildren,
   BrowseRoute: BrowseRoute,
+  CreatorsRoute: CreatorsRoute,
   DashboardRoute: DashboardRoute,
+  NotificationsRoute: NotificationsRoute,
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
-  SubscriptionsRoute: SubscriptionsRoute,
   UploadRoute: UploadRoute,
   ProfileIdRoute: ProfileIdRoute,
   ProfileEditRoute: ProfileEditRoute,
   VideoIdRoute: VideoIdRoute,
+  VideoEditIdRoute: VideoEditIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

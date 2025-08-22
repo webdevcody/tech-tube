@@ -144,13 +144,15 @@ export const getSubscribedVideosAndCommentsFn = createServerFn({
   .handler(async ({ context }) => {
     const userId = context.userId;
     
-    const [videos, comments] = await Promise.all([
+    const [videos, comments, subscribedUsers] = await Promise.all([
       getSubscribedUsersVideos(userId),
       getSubscribedUsersComments(userId),
+      findUserSubscriptions(userId),
     ]);
 
     return {
       videos,
       comments,
+      subscribedUsers,
     };
   });
