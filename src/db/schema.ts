@@ -4,6 +4,7 @@ import {
   timestamp,
   boolean,
   integer,
+  real,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -15,6 +16,7 @@ export const user = pgTable("user", {
     .$defaultFn(() => false)
     .notNull(),
   image: text("image"),
+  bio: text("bio"),
   createdAt: timestamp("created_at")
     .$defaultFn(() => /* @__PURE__ */ new Date())
     .notNull(),
@@ -73,10 +75,11 @@ export const video = pgTable("video", {
   description: text("description"),
   videoUrl: text("video_url").notNull(),
   thumbnailUrl: text("thumbnail_url"),
+  cloudinaryId: text("cloudinary_id"),
   status: text("status")
     .$default(() => "processing")
     .notNull(),
-  duration: integer("duration"),
+  duration: real("duration"),
   viewCount: integer("view_count")
     .$default(() => 0)
     .notNull(),
@@ -91,10 +94,98 @@ export const video = pgTable("video", {
     .notNull(),
 });
 
-export const videoRelations = relations(video, ({ one }) => ({
+export const comment = pgTable("comment", {
+  id: text("id").primaryKey(),
+  content: text("content").notNull(),
+  videoId: text("video_id")
+    .notNull()
+    .references(() => video.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at")
+    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .notNull(),
+  updatedAt: timestamp("updated_at")
+    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
+
+export const subscription = pgTable("subscription", {
+  id: text("id").primaryKey(),
+  subscriberId: text("subscriber_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  subscribedToId: text("subscribed_to_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at")
+    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
+
+export const commentLike = pgTable("comment_like", {
+  id: text("id").primaryKey(),
+  commentId: text("comment_id")
+    .notNull()
+    .references(() => comment.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at")
+    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
+
+export const userRelations = relations(user, ({ many }) => ({
+  videos: many(video),
+  comments: many(comment),
+  commentLikes: many(commentLike),
+  subscriptions: many(subscription, { relationName: "subscriber" }),
+  subscribers: many(subscription, { relationName: "subscribedTo" }),
+}));
+
+export const videoRelations = relations(video, ({ one, many }) => ({
   user: one(user, {
     fields: [video.userId],
     references: [user.id],
+  }),
+  comments: many(comment),
+}));
+
+export const commentRelations = relations(comment, ({ one, many }) => ({
+  user: one(user, {
+    fields: [comment.userId],
+    references: [user.id],
+  }),
+  video: one(video, {
+    fields: [comment.videoId],
+    references: [video.id],
+  }),
+  likes: many(commentLike),
+}));
+
+export const commentLikeRelations = relations(commentLike, ({ one }) => ({
+  comment: one(comment, {
+    fields: [commentLike.commentId],
+    references: [comment.id],
+  }),
+  user: one(user, {
+    fields: [commentLike.userId],
+    references: [user.id],
+  }),
+}));
+
+export const subscriptionRelations = relations(subscription, ({ one }) => ({
+  subscriber: one(user, {
+    fields: [subscription.subscriberId],
+    references: [user.id],
+    relationName: "subscriber",
+  }),
+  subscribedTo: one(user, {
+    fields: [subscription.subscribedToId],
+    references: [user.id],
+    relationName: "subscribedTo",
   }),
 }));
 
@@ -103,3 +194,22 @@ export type CreateVideoData = typeof video.$inferInsert;
 export type UpdateVideoData = Partial<
   Omit<CreateVideoData, "id" | "createdAt">
 >;
+
+export type Comment = typeof comment.$inferSelect;
+export type CreateCommentData = typeof comment.$inferInsert;
+export type UpdateCommentData = Partial<
+  Omit<CreateCommentData, "id" | "createdAt">
+>;
+
+export type Subscription = typeof subscription.$inferSelect;
+export type CreateSubscriptionData = typeof subscription.$inferInsert;
+export type UpdateSubscriptionData = Partial<
+  Omit<CreateSubscriptionData, "id" | "createdAt">
+>;
+
+export type CommentLike = typeof commentLike.$inferSelect;
+export type CreateCommentLikeData = typeof commentLike.$inferInsert;
+
+export type User = typeof user.$inferSelect;
+export type CreateUserData = typeof user.$inferInsert;
+export type UpdateUserData = Partial<Omit<CreateUserData, "id" | "createdAt">>;

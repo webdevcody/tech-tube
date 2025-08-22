@@ -94,11 +94,11 @@ Define a simple server function without authentication:
 ```typescript
 // src/server/posts.ts
 import { createServerFn } from "@tanstack/start";
-import { db } from "~/db";
+import { database } from "~/db";
 import { posts } from "~/db/schema";
 
 export const getPostsServerFn = createServerFn().handler(async () => {
-  const allPosts = await db.select().from(posts);
+  const allPosts = await database.select().from(posts);
   return allPosts;
 });
 ```
@@ -111,7 +111,7 @@ For functions requiring authentication, use middleware:
 // src/server/protected-posts.ts
 import { createServerFn } from "@tanstack/start";
 import { authMiddleware } from "~/middleware/auth";
-import { db } from "~/db";
+import { database } from "~/db";
 import { posts } from "~/db/schema";
 import { eq } from "drizzle-orm";
 
@@ -120,7 +120,7 @@ export const getUserPostsServerFn = createServerFn()
   .handler(async ({ context }) => {
     const { user } = context;
 
-    const userPosts = await db
+    const userPosts = await database
       .select()
       .from(posts)
       .where(eq(posts.userId, user.id));
@@ -163,7 +163,7 @@ Use Zod for input validation in server functions:
 // src/server/posts-with-validation.ts
 import { createServerFn } from "@tanstack/start";
 import { z } from "zod";
-import { db } from "~/db";
+import { database } from "~/db";
 import { posts } from "~/db/schema";
 import { authMiddleware } from "~/middleware/auth";
 
@@ -176,7 +176,11 @@ const createPostSchema = z.object({
 
 const updatePostSchema = z.object({
   id: z.string().uuid("Invalid post ID"),
-  title: z.string().min(1, "Title is required").max(100, "Title too long").optional(),
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .max(100, "Title too long")
+    .optional(),
   content: z.string().min(1, "Content is required").optional(),
   categoryId: z.string().uuid("Invalid category ID").optional(),
 });
@@ -188,7 +192,7 @@ export const createPostServerFn = createServerFn({ method: "POST" })
     const { user } = context;
     const { title, content, categoryId } = data;
 
-    const newPost = await db
+    const newPost = await database
       .insert(posts)
       .values({
         title,
@@ -210,7 +214,7 @@ export const updatePostServerFn = createServerFn({ method: "PUT" })
     const { id, ...updates } = data;
 
     // Check if post belongs to user
-    const existingPost = await db
+    const existingPost = await database
       .select()
       .from(posts)
       .where(eq(posts.id, id) && eq(posts.userId, user.id))
@@ -220,7 +224,7 @@ export const updatePostServerFn = createServerFn({ method: "PUT" })
       throw new Error("Post not found or unauthorized");
     }
 
-    const updatedPost = await db
+    const updatedPost = await database
       .update(posts)
       .set({
         ...updates,
@@ -241,7 +245,7 @@ Validate query parameters in GET requests:
 // src/server/posts-search.ts
 import { createServerFn } from "@tanstack/start";
 import { z } from "zod";
-import { db } from "~/db";
+import { database } from "~/db";
 import { posts } from "~/db/schema";
 import { like, desc, asc } from "drizzle-orm";
 
@@ -258,14 +262,14 @@ export const searchPostsServerFn = createServerFn({ method: "GET" })
   .validator(searchParamsSchema)
   .handler(async ({ data }) => {
     const { q, category, page, limit, sortBy, sortOrder } = data;
-    
+
     let query = db.select().from(posts);
 
     // Add search filters
     if (q) {
       query = query.where(like(posts.title, `%${q}%`));
     }
-    
+
     if (category) {
       query = query.where(eq(posts.categoryId, category));
     }
@@ -279,7 +283,7 @@ export const searchPostsServerFn = createServerFn({ method: "GET" })
     query = query.limit(limit).offset(offset);
 
     const results = await query;
-    
+
     return {
       posts: results,
       pagination: {
@@ -299,12 +303,17 @@ Handle form submissions with file uploads:
 // src/server/upload-post.ts
 import { createServerFn } from "@tanstack/start";
 import { z } from "zod";
-import { db } from "~/db";
+import { database } from "~/db";
 import { posts } from "~/db/schema";
 import { authMiddleware } from "~/middleware/auth";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+];
 
 const uploadPostSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -333,7 +342,7 @@ export const uploadPostServerFn = createServerFn({ method: "POST" })
       imageUrl = await uploadImageToStorage(image);
     }
 
-    const newPost = await db
+    const newPost = await database
       .insert(posts)
       .values({
         title,
@@ -362,7 +371,7 @@ Handle validation errors gracefully:
 // src/server/posts-with-error-handling.ts
 import { createServerFn } from "@tanstack/start";
 import { z, ZodError } from "zod";
-import { db } from "~/db";
+import { database } from "~/db";
 import { posts } from "~/db/schema";
 import { authMiddleware } from "~/middleware/auth";
 
@@ -371,7 +380,9 @@ const createPostSchema = z.object({
   content: z.string().min(1, "Content is required"),
 });
 
-export const createPostWithErrorHandlingServerFn = createServerFn({ method: "POST" })
+export const createPostWithErrorHandlingServerFn = createServerFn({
+  method: "POST",
+})
   .middleware([authMiddleware])
   .validator(createPostSchema)
   .handler(async ({ data, context }) => {
@@ -379,7 +390,7 @@ export const createPostWithErrorHandlingServerFn = createServerFn({ method: "POS
       const { user } = context;
       const { title, content } = data;
 
-      const newPost = await db
+      const newPost = await database
         .insert(posts)
         .values({
           title,
@@ -403,7 +414,7 @@ export const createPostWithErrorHandlingServerFn = createServerFn({ method: "POS
           error: error.message,
         };
       }
-      
+
       return {
         success: false,
         data: null,
@@ -424,7 +435,7 @@ import { createPostServerFn } from "~/server/posts-with-validation";
 
 export function CreatePostForm() {
   const queryClient = useQueryClient();
-  
+
   const createPostMutation = useMutation({
     mutationFn: createPostServerFn,
     onSuccess: () => {
@@ -435,7 +446,7 @@ export function CreatePostForm() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    
+
     try {
       await createPostMutation.mutateAsync({
         title: formData.get("title") as string,

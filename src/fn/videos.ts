@@ -7,6 +7,7 @@ import {
 } from "~/data-access/videos";
 import { z } from "zod";
 import { authenticatedMiddleware } from "./middleware";
+import { publicEnv } from "~/config/publicEnv";
 
 export const getRecentVideosFn = createServerFn().handler(async () => {
   return await findRecentVideos(20);
@@ -23,19 +24,28 @@ export const createVideoFn = createServerFn({
     z.object({
       title: z.string().min(3).max(100),
       description: z.string().max(500).optional(),
-      videoUrl: z.url(),
-      thumbnailUrl: z.url().optional().or(z.literal("")),
-      status: z
-        .enum(["processing", "published", "private", "unlisted"])
-        .default("processing"),
-      duration: z.number().int().min(1).optional(),
+      cloudinaryId: z.string().min(1),
+      thumbnailUrl: z.string().optional(),
+      duration: z.number().optional(),
     })
   )
   .middleware([authenticatedMiddleware])
   .handler(async ({ data, context }) => {
+    // Generate Cloudinary URLs from the public ID
+    const videoUrl = `https://res.cloudinary.com/${publicEnv.cloudName}/video/upload/${data.cloudinaryId}`;
+    const thumbnailUrl =
+      data.thumbnailUrl ||
+      `https://res.cloudinary.com/${publicEnv.cloudName}/video/upload/${data.cloudinaryId}.jpg`;
+
     const videoData = {
       id: crypto.randomUUID(),
-      ...data,
+      title: data.title,
+      description: data.description,
+      videoUrl,
+      thumbnailUrl,
+      cloudinaryId: data.cloudinaryId,
+      duration: data.duration,
+      status: "published" as const,
       userId: context.userId,
     };
 

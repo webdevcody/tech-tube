@@ -10,7 +10,7 @@ interface VideoCardProps {
 export function VideoCard({ video }: VideoCardProps) {
   return (
     <article className="bg-card rounded-xl shadow-sm border border-border overflow-hidden hover:shadow-lg hover:border-border/60 transition-all duration-200 group">
-      <Link 
+      <Link
         to="/video/$id"
         params={{ id: video.id }}
         className="block w-full text-left focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-xl"

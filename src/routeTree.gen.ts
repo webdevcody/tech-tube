@@ -12,12 +12,15 @@ import { createServerRootRoute } from '@tanstack/react-start/server'
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UploadRouteImport } from './routes/upload'
+import { Route as SubscriptionsRouteImport } from './routes/subscriptions'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as VideoIdRouteImport } from './routes/video/$id'
+import { Route as ProfileEditRouteImport } from './routes/profile/edit'
+import { Route as ProfileIdRouteImport } from './routes/profile/$id'
 import { ServerRoute as ApiAuthSplatServerRouteImport } from './routes/api/auth/$'
 
 const rootServerRouteImport = createServerRootRoute()
@@ -25,6 +28,11 @@ const rootServerRouteImport = createServerRootRoute()
 const UploadRoute = UploadRouteImport.update({
   id: '/upload',
   path: '/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SubscriptionsRoute = SubscriptionsRouteImport.update({
+  id: '/subscriptions',
+  path: '/subscriptions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignUpRoute = SignUpRouteImport.update({
@@ -57,6 +65,16 @@ const VideoIdRoute = VideoIdRouteImport.update({
   path: '/video/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileEditRoute = ProfileEditRouteImport.update({
+  id: '/profile/edit',
+  path: '/profile/edit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileIdRoute = ProfileIdRouteImport.update({
+  id: '/profile/$id',
+  path: '/profile/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatServerRoute = ApiAuthSplatServerRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -69,7 +87,10 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/subscriptions': typeof SubscriptionsRoute
   '/upload': typeof UploadRoute
+  '/profile/$id': typeof ProfileIdRoute
+  '/profile/edit': typeof ProfileEditRoute
   '/video/$id': typeof VideoIdRoute
 }
 export interface FileRoutesByTo {
@@ -78,7 +99,10 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/subscriptions': typeof SubscriptionsRoute
   '/upload': typeof UploadRoute
+  '/profile/$id': typeof ProfileIdRoute
+  '/profile/edit': typeof ProfileEditRoute
   '/video/$id': typeof VideoIdRoute
 }
 export interface FileRoutesById {
@@ -88,7 +112,10 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/subscriptions': typeof SubscriptionsRoute
   '/upload': typeof UploadRoute
+  '/profile/$id': typeof ProfileIdRoute
+  '/profile/edit': typeof ProfileEditRoute
   '/video/$id': typeof VideoIdRoute
 }
 export interface FileRouteTypes {
@@ -99,7 +126,10 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/sign-in'
     | '/sign-up'
+    | '/subscriptions'
     | '/upload'
+    | '/profile/$id'
+    | '/profile/edit'
     | '/video/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -108,7 +138,10 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/sign-in'
     | '/sign-up'
+    | '/subscriptions'
     | '/upload'
+    | '/profile/$id'
+    | '/profile/edit'
     | '/video/$id'
   id:
     | '__root__'
@@ -117,7 +150,10 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/sign-in'
     | '/sign-up'
+    | '/subscriptions'
     | '/upload'
+    | '/profile/$id'
+    | '/profile/edit'
     | '/video/$id'
   fileRoutesById: FileRoutesById
 }
@@ -127,7 +163,10 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
+  SubscriptionsRoute: typeof SubscriptionsRoute
   UploadRoute: typeof UploadRoute
+  ProfileIdRoute: typeof ProfileIdRoute
+  ProfileEditRoute: typeof ProfileEditRoute
   VideoIdRoute: typeof VideoIdRoute
 }
 export interface FileServerRoutesByFullPath {
@@ -159,6 +198,13 @@ declare module '@tanstack/react-router' {
       path: '/upload'
       fullPath: '/upload'
       preLoaderRoute: typeof UploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/subscriptions': {
+      id: '/subscriptions'
+      path: '/subscriptions'
+      fullPath: '/subscriptions'
+      preLoaderRoute: typeof SubscriptionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sign-up': {
@@ -203,6 +249,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VideoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile/edit': {
+      id: '/profile/edit'
+      path: '/profile/edit'
+      fullPath: '/profile/edit'
+      preLoaderRoute: typeof ProfileEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile/$id': {
+      id: '/profile/$id'
+      path: '/profile/$id'
+      fullPath: '/profile/$id'
+      preLoaderRoute: typeof ProfileIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 declare module '@tanstack/react-start/server' {
@@ -223,7 +283,10 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
+  SubscriptionsRoute: SubscriptionsRoute,
   UploadRoute: UploadRoute,
+  ProfileIdRoute: ProfileIdRoute,
+  ProfileEditRoute: ProfileEditRoute,
   VideoIdRoute: VideoIdRoute,
 }
 export const routeTree = rootRouteImport

@@ -15,6 +15,48 @@
       "when": 1755655181383,
       "tag": "0001_redundant_joseph",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1755808705591,
+      "tag": "0002_colossal_harpoon",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1755869663123,
+      "tag": "0003_rainy_silk_fever",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1755877446970,
+      "tag": "0004_skinny_glorian",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1755877538417,
+      "tag": "0005_sparkling_solo",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1755877633242,
+      "tag": "0006_clumsy_kate_bishop",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1755879120700,
+      "tag": "0007_funny_azazel",
+      "breakpoints": true
     }
   ]
 }

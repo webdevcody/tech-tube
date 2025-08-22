@@ -1,7 +1,36 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { getVideoByIdFn } from "~/fn/videos";
 import { Page } from "~/components/Page";
+import { useEffect, useState } from "react";
+import { publicEnv } from "~/config/publicEnv";
+import { CommentsSection } from "~/components/CommentsSection";
+
+interface CloudinaryVideoPlayerProps {
+  publicId?: string;
+}
+
+function CloudinaryVideoPlayer({ publicId }: CloudinaryVideoPlayerProps) {
+  if (!publicId) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground">
+        Video not available
+      </div>
+    );
+  }
+
+  return (
+    <iframe 
+      src={`https://player.cloudinary.com/embed/?cloud_name=${publicEnv.cloudName}&public_id=${publicId}`}
+      width="640"
+      height="360"
+      style={{ height: "auto", width: "100%", aspectRatio: "640/360" }}
+      allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+      allowFullScreen
+      className="w-full h-full"
+    />
+  );
+}
 
 const videoQueryOptions = (id: string) => ({
   queryKey: ["video", id],
@@ -17,7 +46,16 @@ export const Route = createFileRoute("/video/$id")({
 
 function VideoDetail() {
   const { id } = Route.useParams();
-  const { data: video, isLoading, error } = useQuery(videoQueryOptions(id));
+  const {
+    data: video,
+    isLoading,
+    error,
+  } = useSuspenseQuery(videoQueryOptions(id));
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (isLoading) {
     return (
@@ -59,14 +97,18 @@ function VideoDetail() {
         <div className="space-y-6">
           {/* Video Player */}
           <div className="aspect-video bg-black rounded-lg overflow-hidden">
-            <video
-              className="w-full h-full"
-              controls
-              poster={video.thumbnailUrl || undefined}
-            >
-              <source src={video.videoUrl} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
+            {video.cloudinaryId ? (
+              <CloudinaryVideoPlayer publicId={video.cloudinaryId} />
+            ) : (
+              <video
+                className="w-full h-full"
+                controls
+                poster={video.thumbnailUrl || undefined}
+              >
+                <source src={video.videoUrl} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            )}
           </div>
 
           {/* Video Info */}
@@ -76,7 +118,11 @@ function VideoDetail() {
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span>{video.viewCount} views</span>
                 <span>•</span>
-                <span>{formatRelativeTime(new Date(video.createdAt))}</span>
+                <span>
+                  {mounted
+                    ? formatRelativeTime(new Date(video.createdAt))
+                    : new Date(video.createdAt).toLocaleDateString()}
+                </span>
                 <span>•</span>
                 <span className="capitalize">{video.status}</span>
                 {video.duration && (
@@ -98,6 +144,9 @@ function VideoDetail() {
             )}
           </div>
         </div>
+
+        {/* Comments Section */}
+        <CommentsSection videoId={video.id} />
       </div>
     </Page>
   );
