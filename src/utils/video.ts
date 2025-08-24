@@ -18,3 +18,7 @@ export function formatRelativeTime(date: string): string {
   if (diffInDays < 365) return `${Math.floor(diffInDays / 30)} months ago`;
   return `${Math.floor(diffInDays / 365)} years ago`;
 }
+
+export function generatePreviewGifUrl(cloudinaryId: string, cloudName: string): string {
+  return `https://res.cloudinary.com/${cloudName}/video/upload/e_preview:duration_3/c_scale,h_200/e_loop/${cloudinaryId}.gif`;
+}

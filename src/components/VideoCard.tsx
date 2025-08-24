@@ -1,7 +1,7 @@
 import type { Video } from "~/db/schema";
 import type { VideoWithLikes } from "~/data-access/videos";
 import { Video as VideoIcon, Eye, Heart, User, Tag } from "lucide-react";
-import { formatDuration, formatRelativeTime } from "~/utils/video";
+import { formatDuration, formatRelativeTime, generatePreviewGifUrl } from "~/utils/video";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -9,6 +9,7 @@ import { likeVideoFn, unlikeVideoFn, getVideoLikeStatusFn } from "~/fn/videos";
 import { authClient } from "~/lib/auth-client";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
+import { publicEnv } from "~/config/publicEnv";
 
 interface VideoCardProps {
   video: VideoWithLikes;
@@ -72,22 +73,49 @@ function LikeButton({
 }
 
 export function VideoCard({ video }: VideoCardProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [previewLoaded, setPreviewLoaded] = useState(false);
+
+  const previewGifUrl = video.cloudinaryId && publicEnv.cloudName
+    ? generatePreviewGifUrl(video.cloudinaryId, publicEnv.cloudName)
+    : null;
+
   return (
     <Link
       to="/video/$id"
       params={{ id: video.id }}
       className="block w-full text-left focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-xl"
       aria-label={`Watch ${video.title} by ${video.user.name} - ${video.viewCount.toLocaleString()} views, uploaded ${formatRelativeTime(new Date(video.createdAt).toISOString())}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <article className="bg-card rounded-xl shadow-sm border border-border overflow-hidden hover:shadow-lg hover:border-border/60 transition-all duration-200 group h-full">
         <div className="aspect-video bg-muted relative overflow-hidden">
           {video.thumbnailUrl ? (
-            <img
-              src={video.thumbnailUrl}
-              alt=""
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-              loading="lazy"
-            />
+            <>
+              <img
+                src={video.thumbnailUrl}
+                alt=""
+                className={`w-full h-full object-cover transition-all duration-300 ${
+                  isHovered && previewGifUrl && previewLoaded 
+                    ? "opacity-0" 
+                    : "opacity-100 group-hover:scale-105"
+                }`}
+                loading="lazy"
+              />
+              {previewGifUrl && (
+                <img
+                  src={previewGifUrl}
+                  alt=""
+                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+                    isHovered && previewLoaded ? "opacity-100" : "opacity-0"
+                  }`}
+                  loading="lazy"
+                  onLoad={() => setPreviewLoaded(true)}
+                  onError={() => setPreviewLoaded(false)}
+                />
+              )}
+            </>
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
               <VideoIcon className="h-12 w-12 text-muted-foreground/50" />

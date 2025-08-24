@@ -13,6 +13,7 @@ import { uploadImage } from "~/utils/cloudinary";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getUserTagsFn, addUserTagFn, removeUserTagFn } from "~/fn/tags";
 import { toast } from "sonner";
+import { getAvatarUrl, getInitials } from "~/utils/avatar";
 
 interface EditProfileFormData {
   name: string;
@@ -33,6 +34,9 @@ export function EditProfileForm({ user, onSubmit, onCancel }: EditProfileFormPro
   const [newTagDescription, setNewTagDescription] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
+
+  const avatarUrl = getAvatarUrl(user.image, user.name, user.id);
+  const initials = getInitials(user.name);
 
   const {
     register,
@@ -148,11 +152,11 @@ export function EditProfileForm({ user, onSubmit, onCancel }: EditProfileFormPro
         <div className="flex items-center gap-6">
           <Avatar className="w-20 h-20">
             <AvatarImage 
-              src={imagePreview || user.image || undefined} 
+              src={imagePreview || avatarUrl} 
               alt={user.name} 
             />
             <AvatarFallback className="text-xl bg-primary/10">
-              <User className="w-10 h-10" />
+              {initials}
             </AvatarFallback>
           </Avatar>
           <div className="space-y-2">

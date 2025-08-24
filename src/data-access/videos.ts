@@ -352,6 +352,56 @@ async function getTagsForVideos(videoIds: string[]): Promise<Map<string, Array<{
   return tagsMap;
 }
 
+export async function findTrendingVideosWithLikes(limit: number = 12): Promise<VideoWithLikes[]> {
+  const twoWeeksAgo = new Date();
+  twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
+  const result = await database
+    .select({
+      id: video.id,
+      title: video.title,
+      description: video.description,
+      videoUrl: video.videoUrl,
+      thumbnailUrl: video.thumbnailUrl,
+      cloudinaryId: video.cloudinaryId,
+      status: video.status,
+      duration: video.duration,
+      viewCount: video.viewCount,
+      transcript: video.transcript,
+      transcriptStatus: video.transcriptStatus,
+      userId: video.userId,
+      createdAt: video.createdAt,
+      updatedAt: video.updatedAt,
+      likeCount: count(videoLike.id),
+      user: {
+        id: user.id,
+        name: user.name,
+        image: user.image,
+      },
+    })
+    .from(video)
+    .innerJoin(user, eq(video.userId, user.id))
+    .leftJoin(videoLike, eq(video.id, videoLike.videoId))
+    .where(sql`${video.createdAt} >= ${twoWeeksAgo}`)
+    .groupBy(video.id, user.id, user.name, user.image)
+    .orderBy(desc(video.viewCount))
+    .limit(limit);
+
+  const videos = result.map(row => ({
+    ...row,
+    likeCount: Number(row.likeCount),
+  }));
+
+  // Fetch tags for all videos
+  const videoIds = videos.map(v => v.id);
+  const tagsMap = await getTagsForVideos(videoIds);
+
+  return videos.map(v => ({
+    ...v,
+    tags: tagsMap.get(v.id) || [],
+  }));
+}
+
 export async function searchVideosByTitle(
   searchQuery: string, 
   sortBy: 'views_asc' | 'views_desc' | 'date_asc' | 'date_desc' = 'date_desc',

@@ -4,6 +4,7 @@ import {
   findPopularVideos,
   findRecentVideosWithLikes,
   findPopularVideosWithLikes,
+  findTrendingVideosWithLikes,
   findVideosByTagWithLikes,
   findRelatedVideosByTags,
   searchVideosByTitle,
@@ -34,6 +35,10 @@ export const getRecentVideosFn = createServerFn().handler(async () => {
 
 export const getPopularVideosFn = createServerFn().handler(async () => {
   return await findPopularVideosWithLikes(20);
+});
+
+export const getTrendingVideosFn = createServerFn().handler(async () => {
+  return await findTrendingVideosWithLikes(12);
 });
 
 export const getVideosByTagFn = createServerFn({

@@ -1,17 +1,17 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { 
-  Video as VideoIcon, 
-  TrendingUp, 
-  Clock, 
-  Tag, 
-  Search, 
+import {
+  Video as VideoIcon,
+  TrendingUp,
+  Clock,
+  Tag,
+  Search,
   X,
   ArrowUpDown,
   SortAsc,
   SortDesc,
   Filter,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
 import { VideoCard } from "~/components/VideoCard";
 import { VideoGridSkeleton } from "~/components/VideoGridSkeleton";
@@ -43,14 +43,14 @@ import {
 const browseSearchSchema = z.object({
   q: z.string().optional(),
   tag: z.string().optional(),
-  sort: z.enum(['views_asc', 'views_desc', 'date_asc', 'date_desc']).optional(),
+  sort: z.enum(["views_asc", "views_desc", "date_asc", "date_desc"]).optional(),
 });
 
 export const Route = createFileRoute("/browse")({
   validateSearch: browseSearchSchema,
   loader: ({ context }) => {
     const { queryClient } = context;
-    queryClient.ensureQueryData(searchVideosQuery("", 'date_desc'));
+    queryClient.ensureQueryData(searchVideosQuery("", "date_desc"));
   },
   component: Browse,
 });
@@ -60,9 +60,9 @@ function Browse() {
   const search = Route.useSearch();
   const [titleSearch, setTitleSearch] = useState(search?.q || "");
   const [tagFilter, setTagFilter] = useState(search?.tag || "");
-  const [sortBy, setSortBy] = useState<'views_asc' | 'views_desc' | 'date_asc' | 'date_desc'>(
-    search?.sort || 'date_desc'
-  );
+  const [sortBy, setSortBy] = useState<
+    "views_asc" | "views_desc" | "date_asc" | "date_desc"
+  >(search?.sort || "date_desc");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const { data: videos, isLoading } = useQuery(
@@ -102,7 +102,7 @@ function Browse() {
   const handleClearFilters = () => {
     setTitleSearch("");
     setTagFilter("");
-    setSortBy('date_desc');
+    setSortBy("date_desc");
     navigate({
       to: "/browse",
       search: {},
@@ -115,28 +115,41 @@ function Browse() {
     }
   };
 
-  const hasActiveFilters = !!search?.q || !!search?.tag || (search?.sort && search.sort !== 'date_desc');
+  const hasActiveFilters =
+    !!search?.q ||
+    !!search?.tag ||
+    (search?.sort && search.sort !== "date_desc");
 
   const getSortLabel = () => {
     switch (sortBy) {
-      case 'views_asc': return 'Views (Low to High)';
-      case 'views_desc': return 'Views (High to Low)';
-      case 'date_asc': return 'Oldest First';
-      case 'date_desc': return 'Newest First';
-      default: return 'Sort';
+      case "views_asc":
+        return "Views (Low to High)";
+      case "views_desc":
+        return "Views (High to Low)";
+      case "date_asc":
+        return "Oldest First";
+      case "date_desc":
+        return "Newest First";
+      default:
+        return "Sort";
     }
   };
 
   const getSortIcon = () => {
-    if (sortBy.includes('asc')) return <SortAsc className="h-4 w-4" />;
-    if (sortBy.includes('desc')) return <SortDesc className="h-4 w-4" />;
+    if (sortBy.includes("asc")) return <SortAsc className="h-4 w-4" />;
+    if (sortBy.includes("desc")) return <SortDesc className="h-4 w-4" />;
     return <ArrowUpDown className="h-4 w-4" />;
   };
 
   // Filter videos by tag if tag filter is active
-  const filteredVideos = videos && search?.tag 
-    ? videos.filter(v => v.tags?.some(t => t.name.toLowerCase() === search.tag?.toLowerCase()))
-    : videos;
+  const filteredVideos =
+    videos && search?.tag
+      ? videos.filter((v) =>
+          v.tags?.some(
+            (t) => t.name.toLowerCase() === search.tag?.toLowerCase()
+          )
+        )
+      : videos;
 
   const renderFiltersPanel = () => (
     <div className="space-y-6">
@@ -225,7 +238,7 @@ function Browse() {
                 </button>
               </Badge>
             )}
-            {search?.sort && search.sort !== 'date_desc' && (
+            {search?.sort && search.sort !== "date_desc" && (
               <Badge variant="default" className="px-2 py-1 text-xs">
                 {getSortIcon()}
                 <span className="ml-1">{getSortLabel()}</span>
@@ -275,7 +288,15 @@ function Browse() {
                           variant="destructive"
                           className="ml-2 h-5 w-5 p-0 flex items-center justify-center"
                         >
-                          {[search?.q, search?.tag, (search?.sort !== 'date_desc' ? search?.sort : null)].filter(Boolean).length}
+                          {
+                            [
+                              search?.q,
+                              search?.tag,
+                              search?.sort !== "date_desc"
+                                ? search?.sort
+                                : null,
+                            ].filter(Boolean).length
+                          }
                         </Badge>
                       )}
                     </Button>
@@ -307,8 +328,22 @@ function Browse() {
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary">
                     <Filter className="w-3 h-3 mr-1" />
-                    {[search?.q, search?.tag, (search?.sort !== 'date_desc' ? search?.sort : null)].filter(Boolean).length} filter
-                    {[search?.q, search?.tag, (search?.sort !== 'date_desc' ? search?.sort : null)].filter(Boolean).length !== 1 ? "s" : ""} active
+                    {
+                      [
+                        search?.q,
+                        search?.tag,
+                        search?.sort !== "date_desc" ? search?.sort : null,
+                      ].filter(Boolean).length
+                    }{" "}
+                    filter
+                    {[
+                      search?.q,
+                      search?.tag,
+                      search?.sort !== "date_desc" ? search?.sort : null,
+                    ].filter(Boolean).length !== 1
+                      ? "s"
+                      : ""}{" "}
+                    active
                   </Badge>
                 </div>
 
@@ -358,9 +393,12 @@ function Browse() {
                     <span className="animate-pulse">Loading...</span>
                   ) : (
                     <div className="flex items-center gap-1">
-                      <span className="font-bold">{filteredVideos?.length || 0}</span>
+                      <span className="font-bold">
+                        {filteredVideos?.length || 0}
+                      </span>
                       <span className="text-muted-foreground">
-                        video{(filteredVideos?.length || 0) !== 1 ? "s" : ""} found
+                        video{(filteredVideos?.length || 0) !== 1 ? "s" : ""}{" "}
+                        found
                       </span>
                     </div>
                   )}
@@ -376,26 +414,30 @@ function Browse() {
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuLabel>Sort by</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => handleSortChange('date_desc')}>
+                  <DropdownMenuItem
+                    onClick={() => handleSortChange("date_desc")}
+                  >
                     <Clock className="mr-2 h-4 w-4 text-blue-500" />
-                    Newest First{" "}
-                    {sortBy === 'date_desc' && "↓"}
+                    Newest First {sortBy === "date_desc" && "↓"}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleSortChange('date_asc')}>
+                  <DropdownMenuItem
+                    onClick={() => handleSortChange("date_asc")}
+                  >
                     <Clock className="mr-2 h-4 w-4 text-blue-500" />
-                    Oldest First{" "}
-                    {sortBy === 'date_asc' && "↑"}
+                    Oldest First {sortBy === "date_asc" && "↑"}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => handleSortChange('views_desc')}>
+                  <DropdownMenuItem
+                    onClick={() => handleSortChange("views_desc")}
+                  >
                     <TrendingUp className="mr-2 h-4 w-4 text-green-500" />
-                    Most Views{" "}
-                    {sortBy === 'views_desc' && "↓"}
+                    Most Views {sortBy === "views_desc" && "↓"}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleSortChange('views_asc')}>
+                  <DropdownMenuItem
+                    onClick={() => handleSortChange("views_asc")}
+                  >
                     <TrendingUp className="mr-2 h-4 w-4 text-green-500" />
-                    Least Views{" "}
-                    {sortBy === 'views_asc' && "↑"}
+                    Least Views {sortBy === "views_asc" && "↑"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -405,7 +447,7 @@ function Browse() {
             {isLoading ? (
               <VideoGridSkeleton count={12} />
             ) : filteredVideos && filteredVideos.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 lg:px-5">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 lg:px-5">
                 {filteredVideos.map((video) => (
                   <VideoCard key={video.id} video={video} />
                 ))}
@@ -427,10 +469,7 @@ function Browse() {
                     />
                     {hasActiveFilters && (
                       <div className="mt-6 flex justify-center">
-                        <Button
-                          onClick={handleClearFilters}
-                          variant="outline"
-                        >
+                        <Button onClick={handleClearFilters} variant="outline">
                           <X className="w-4 h-4 mr-2" />
                           Clear all filters
                         </Button>

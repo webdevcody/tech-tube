@@ -7,6 +7,7 @@ import { Link } from "@tanstack/react-router";
 import { SubscriptionButton } from "~/components/SubscriptionButton";
 import { useQuery } from "@tanstack/react-query";
 import { getUserTagsFn } from "~/fn/tags";
+import { getAvatarUrl, getInitials } from "~/utils/avatar";
 
 interface ProfileHeaderProps {
   profile: {
@@ -24,15 +25,18 @@ export function ProfileHeader({ profile, isOwnProfile }: ProfileHeaderProps) {
     queryFn: () => getUserTagsFn({ data: { userId: profile.userId } }),
   });
 
+  const avatarUrl = getAvatarUrl(profile.image, profile.name, profile.userId);
+  const initials = getInitials(profile.name);
+
   return (
     <Card className="sticky top-8">
       <CardContent className="p-6">
         <div className="flex flex-col items-center text-center space-y-6">
           {/* Avatar */}
           <Avatar className="w-32 h-32">
-            <AvatarImage src={profile.image || undefined} alt={profile.name} />
+            <AvatarImage src={avatarUrl} alt={profile.name} />
             <AvatarFallback className="text-3xl bg-primary/10">
-              <User className="w-16 h-16" />
+              {initials}
             </AvatarFallback>
           </Avatar>
 

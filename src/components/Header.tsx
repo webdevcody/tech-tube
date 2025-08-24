@@ -17,6 +17,7 @@ import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { useState } from "react";
 import { getUnreadNotificationCountFn } from "~/fn/notifications";
 import { useQuery } from "@tanstack/react-query";
+import { getAvatarUrl, getInitials } from "~/utils/avatar";
 
 const publicNavigationLinks = [
   {
@@ -53,6 +54,13 @@ export function Header() {
     queryFn: () => getUnreadNotificationCountFn(),
     enabled: !!session,
   });
+
+  const avatarUrl = session?.user 
+    ? getAvatarUrl(session.user.image, session.user.name || 'User', session.user.id)
+    : undefined;
+  const initials = session?.user?.name 
+    ? getInitials(session.user.name) 
+    : 'U';
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -147,14 +155,12 @@ export function Header() {
                       className="relative h-8 w-8 rounded-full"
                     >
                       <Avatar className="h-8 w-8">
-                        {session.user.image && (
-                          <AvatarImage
-                            src={session.user.image}
-                            alt={session.user.name || "Profile"}
-                          />
-                        )}
+                        <AvatarImage
+                          src={avatarUrl}
+                          alt={session.user.name || "Profile"}
+                        />
                         <AvatarFallback className="bg-primary/10">
-                          <User className="h-4 w-4" />
+                          {initials}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
