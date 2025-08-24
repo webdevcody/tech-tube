@@ -8,6 +8,7 @@ const generateSignatureSchema = z.object({
   timestamp: z.number(),
   folder: z.string().optional(),
   auto_chaptering: z.boolean().optional(),
+  auto_transcription: z.boolean().optional(),
   resource_type: z.string(),
 });
 
@@ -33,6 +34,10 @@ export const generateUploadSignatureFn = createServerFn({
 
     if (data.auto_chaptering) {
       paramsToSign.auto_chaptering = "true";
+    }
+
+    if (data.auto_transcription) {
+      paramsToSign.auto_transcription = "true";
     }
 
     // Note: resource_type should NOT be included in signature generation

@@ -16,7 +16,7 @@ export function Page({ children, className = "" }: PageProps) {
       </a>
       <main
         id="main-content"
-        className={`container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 ${className}`}
+        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 ${className}`}
         tabIndex={-1}
         role="main"
       >

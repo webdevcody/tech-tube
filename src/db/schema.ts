@@ -83,6 +83,8 @@ export const video = pgTable("video", {
   viewCount: integer("view_count")
     .$default(() => 0)
     .notNull(),
+  transcript: text("transcript"),
+  transcriptStatus: text("transcript_status"),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),

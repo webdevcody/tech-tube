@@ -31,17 +31,15 @@ function ProfilePage() {
 
   return (
     <Page>
-      <div className="container mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Left Column - Avatar and Basic Info */}
-          <div className="lg:col-span-1">
-            <ProfileHeader profile={profile} isOwnProfile={isOwnProfile} />
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Left Column - Avatar and Basic Info */}
+        <div className="lg:col-span-1">
+          <ProfileHeader profile={profile} isOwnProfile={isOwnProfile} />
+        </div>
 
-          {/* Right Column - Tabs */}
-          <div className="lg:col-span-3">
-            <ProfileTabs videos={videos} userId={profile.userId} />
-          </div>
+        {/* Right Column - Tabs */}
+        <div className="lg:col-span-3">
+          <ProfileTabs videos={videos} userId={profile.userId} />
         </div>
       </div>
     </Page>

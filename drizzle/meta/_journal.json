@@ -85,6 +85,13 @@
       "when": 1755898564172,
       "tag": "0011_long_anthem",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1756045295681,
+      "tag": "0012_steep_pestilence",
+      "breakpoints": true
     }
   ]
 }

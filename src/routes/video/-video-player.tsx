@@ -11,7 +11,10 @@ export function CloudinaryVideoPlayer({
 }: CloudinaryVideoPlayerProps) {
   useEffect(() => {
     import("cloudinary-video-player").then((cloudinary) => {
-      import("cloudinary-video-player/chapters").then(() => {
+      // Try to import chapters, but don't fail if not available
+      import("cloudinary-video-player/chapters").catch(() => {
+        console.log("Chapters module not available");
+      }).finally(() => {
         cloudinary.videoPlayer("video-player", {
           cloud_name: publicEnv.cloudName,
           publicId: publicId,

@@ -141,6 +141,8 @@ export async function getSubscribedUsersVideos(
       duration: video.duration,
       viewCount: video.viewCount,
       status: video.status,
+      transcript: video.transcript,
+      transcriptStatus: video.transcriptStatus,
       userId: video.userId,
       createdAt: video.createdAt,
       updatedAt: video.updatedAt,

@@ -55,6 +55,7 @@ export class ChunkedUploader {
         timestamp,
         folder: "videos",
         auto_chaptering: true,
+        auto_transcription: true,
         resource_type: "video",
       };
       console.log("Sending signature request with:", signatureRequest);
@@ -104,6 +105,13 @@ export class ChunkedUploader {
         this.uniqueUploadId
       }; start: ${start}, end: ${end - 1}`
     );
+    
+    console.log("FormData contents:");
+    for (let [key, value] of formData.entries()) {
+      if (key !== "file") { // Don't log the actual file data
+        console.log(`${key}: ${value}`);
+      }
+    }
 
     try {
       const response = await fetch(

@@ -25,6 +25,8 @@ export async function findVideosByUserId(userId: string): Promise<VideoWithLikes
       status: video.status,
       duration: video.duration,
       viewCount: video.viewCount,
+      transcript: video.transcript,
+      transcriptStatus: video.transcriptStatus,
       userId: video.userId,
       createdAt: video.createdAt,
       updatedAt: video.updatedAt,

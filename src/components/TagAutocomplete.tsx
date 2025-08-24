@@ -125,7 +125,7 @@ export function TagAutocomplete({
       </div>
       
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-1">
+        <div className="absolute top-full left-0 right-0 z-[9999] mt-1">
           <div className="bg-popover border rounded-md shadow-md max-h-60 overflow-auto">
             {isLoading ? (
               <div className="p-3 text-sm text-muted-foreground text-center">

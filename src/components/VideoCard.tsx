@@ -1,6 +1,6 @@
 import type { Video } from "~/db/schema";
 import type { VideoWithLikes } from "~/data-access/videos";
-import { Video as VideoIcon, Eye, Heart, User } from "lucide-react";
+import { Video as VideoIcon, Eye, Heart, User, Tag } from "lucide-react";
 import { formatDuration, formatRelativeTime } from "~/utils/video";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { likeVideoFn, unlikeVideoFn, getVideoLikeStatusFn } from "~/fn/videos";
 import { authClient } from "~/lib/auth-client";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { Badge } from "~/components/ui/badge";
 
 interface VideoCardProps {
   video: VideoWithLikes;
@@ -72,13 +73,13 @@ function LikeButton({
 
 export function VideoCard({ video }: VideoCardProps) {
   return (
-    <article className="bg-card rounded-xl shadow-sm border border-border overflow-hidden hover:shadow-lg hover:border-border/60 transition-all duration-200 group">
-      <Link
-        to="/video/$id"
-        params={{ id: video.id }}
-        className="block w-full text-left focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-xl"
-        aria-label={`Watch ${video.title} by ${video.user.name} - ${video.viewCount.toLocaleString()} views, uploaded ${formatRelativeTime(new Date(video.createdAt).toISOString())}`}
-      >
+    <Link
+      to="/video/$id"
+      params={{ id: video.id }}
+      className="block w-full text-left focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-xl"
+      aria-label={`Watch ${video.title} by ${video.user.name} - ${video.viewCount.toLocaleString()} views, uploaded ${formatRelativeTime(new Date(video.createdAt).toISOString())}`}
+    >
+      <article className="bg-card rounded-xl shadow-sm border border-border overflow-hidden hover:shadow-lg hover:border-border/60 transition-all duration-200 group h-full">
         <div className="aspect-video bg-muted relative overflow-hidden">
           {video.thumbnailUrl ? (
             <img
@@ -102,6 +103,28 @@ export function VideoCard({ video }: VideoCardProps) {
           <h3 className="font-semibold text-base leading-tight line-clamp-2 group-hover:text-primary transition-colors">
             {video.title}
           </h3>
+          {video.tags && video.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {video.tags.slice(0, 3).map((tag) => (
+                <Badge 
+                  key={tag.id} 
+                  variant="secondary" 
+                  className="text-xs px-2 py-0.5 bg-primary/10 hover:bg-primary/20 transition-colors"
+                >
+                  <Tag className="h-2.5 w-2.5 mr-1" />
+                  {tag.name}
+                </Badge>
+              ))}
+              {video.tags.length > 3 && (
+                <Badge 
+                  variant="outline" 
+                  className="text-xs px-2 py-0.5 text-muted-foreground"
+                >
+                  +{video.tags.length - 3} more
+                </Badge>
+              )}
+            </div>
+          )}
           <div className="flex items-center gap-3">
             <Avatar className="w-8 h-8">
               <AvatarImage src={video.user.image || undefined} alt={video.user.name} />
@@ -126,7 +149,7 @@ export function VideoCard({ video }: VideoCardProps) {
             </div>
           </div>
         </div>
-      </Link>
-    </article>
+      </article>
+    </Link>
   );
 }

@@ -23,6 +23,7 @@ import { Heart, Eye, Edit, Tag } from "lucide-react";
 import { authClient } from "~/lib/auth-client";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
+import { TranscriptDialog } from "~/components/TranscriptDialog";
 
 const videoQueryOptions = (id: string) => ({
   queryKey: ["video", id],
@@ -245,7 +246,10 @@ function VideoDetail() {
                     </>
                   )}
                 </div>
-                <VideoLikeButton videoId={video.id} />
+                <div className="flex items-center gap-3">
+                  <TranscriptDialog videoId={video.id} />
+                  <VideoLikeButton videoId={video.id} />
+                </div>
               </div>
             </div>
 
